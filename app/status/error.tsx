@@ -1,11 +1,16 @@
 "use client";
 
+import { startTransition } from "react";
+import { useRouter } from "next/navigation";
+
 export default function StatusError({
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const router = useRouter();
+
   return (
     <main className="flex min-h-screen items-center justify-center">
       <div className="space-y-4 text-center">
@@ -14,7 +19,12 @@ export default function StatusError({
           Could not load the status page. Please try again.
         </p>
         <button
-          onClick={reset}
+          onClick={() => {
+            startTransition(() => {
+              router.refresh();
+              reset();
+            });
+          }}
           className="rounded-lg bg-foreground px-4 py-2 text-background transition-opacity hover:opacity-90"
         >
           Try again
