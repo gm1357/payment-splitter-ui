@@ -17,8 +17,23 @@ export const defaultStatusResponse = {
   },
 };
 
+export const defaultUserProfile = {
+  id: "user-1",
+  name: "Test User",
+  email: "test@example.com",
+};
+
 export const handlers = [
   http.get("http://mock-api/status", () => {
     return HttpResponse.json(defaultStatusResponse);
+  }),
+  http.post("http://mock-api/auth/login", () => {
+    return HttpResponse.json({ access_token: "mock-jwt-token" });
+  }),
+  http.post("http://mock-api/user", () => {
+    return new HttpResponse(null, { status: 201 });
+  }),
+  http.get("http://mock-api/user/profile", () => {
+    return HttpResponse.json(defaultUserProfile);
   }),
 ];
