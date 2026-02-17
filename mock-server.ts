@@ -9,7 +9,7 @@ mswServer.listen({ onUnhandledRequest: "bypass" });
 const bridgeServer = createServer(async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") {
     res.writeHead(204);
@@ -39,7 +39,25 @@ const bridgeServer = createServer(async (req, res) => {
 
   // Proxy all other requests through fetch — MSW intercepts these
   try {
-    const fetchResponse = await fetch(`${MOCK_API_BASE}${req.url}`);
+    const chunks: Buffer[] = [];
+    for await (const chunk of req) {
+      chunks.push(chunk as Buffer);
+    }
+    const body = Buffer.concat(chunks);
+
+    const headers: Record<string, string> = {};
+    if (req.headers["content-type"]) {
+      headers["Content-Type"] = req.headers["content-type"];
+    }
+    if (req.headers["authorization"]) {
+      headers["Authorization"] = req.headers["authorization"];
+    }
+
+    const fetchResponse = await fetch(`${MOCK_API_BASE}${req.url}`, {
+      method: req.method,
+      headers,
+      body: body.length > 0 ? body : undefined,
+    });
     const responseBody = await fetchResponse.text();
     res.writeHead(fetchResponse.status, {
       "Content-Type":
